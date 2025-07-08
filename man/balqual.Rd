@@ -10,7 +10,8 @@ balqual(
   type = c("smd", "r", "var_ratio"),
   statistic = c("mean", "max"),
   cutoffs = NULL,
-  round = 3
+  round = 3,
+  print_out = TRUE
 )
 }
 \arguments{
@@ -56,6 +57,9 @@ corresponding metric, below which the dataset is considered balanced. If
 
 \item{round}{An integer specifying the number of decimal places to round the
 output to.}
+
+\item{print_out}{Logical. If \code{TRUE} (default), a matching quality summary
+will be printed to the console. Set to \code{FALSE} to suppress this output.}
 }
 \value{
 If assigned to a name, returns a list of summary statistics of class

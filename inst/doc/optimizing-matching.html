@@ -1,0 +1,619 @@
+<!DOCTYPE html>
+
+<html>
+
+<head>
+
+<meta charset="utf-8" />
+<meta name="generator" content="pandoc" />
+<meta http-equiv="X-UA-Compatible" content="IE=EDGE" />
+
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+
+
+
+<title>Optimizing the Matching Process with a Random Search Algorithm</title>
+
+<script>// Pandoc 2.9 adds attributes on both header and div. We remove the former (to
+// be compatible with the behavior of Pandoc < 2.8).
+document.addEventListener('DOMContentLoaded', function(e) {
+  var hs = document.querySelectorAll("div.section[class*='level'] > :first-child");
+  var i, h, a;
+  for (i = 0; i < hs.length; i++) {
+    h = hs[i];
+    if (!/^h[1-6]$/i.test(h.tagName)) continue;  // it should be a header h1-h6
+    a = h.attributes;
+    while (a.length > 0) h.removeAttribute(a[0].name);
+  }
+});
+</script>
+
+<style type="text/css">
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+span.underline{text-decoration: underline;}
+div.column{display: inline-block; vertical-align: top; width: 50%;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+</style>
+
+
+
+<style type="text/css">
+code {
+white-space: pre;
+}
+.sourceCode {
+overflow: visible;
+}
+</style>
+<style type="text/css" data-origin="pandoc">
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { display: inline-block; text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+{ counter-reset: source-line 0; }
+pre.numberSource code > span
+{ position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+{ content: counter(source-line);
+position: relative; left: -1em; text-align: right; vertical-align: baseline;
+border: none; display: inline-block;
+-webkit-touch-callout: none; -webkit-user-select: none;
+-khtml-user-select: none; -moz-user-select: none;
+-ms-user-select: none; user-select: none;
+padding: 0 4px; width: 4em;
+color: #aaaaaa;
+}
+pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa; padding-left: 4px; }
+div.sourceCode
+{ }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+code span.al { color: #ff0000; font-weight: bold; } 
+code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.at { color: #7d9029; } 
+code span.bn { color: #40a070; } 
+code span.bu { color: #008000; } 
+code span.cf { color: #007020; font-weight: bold; } 
+code span.ch { color: #4070a0; } 
+code span.cn { color: #880000; } 
+code span.co { color: #60a0b0; font-style: italic; } 
+code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.do { color: #ba2121; font-style: italic; } 
+code span.dt { color: #902000; } 
+code span.dv { color: #40a070; } 
+code span.er { color: #ff0000; font-weight: bold; } 
+code span.ex { } 
+code span.fl { color: #40a070; } 
+code span.fu { color: #06287e; } 
+code span.im { color: #008000; font-weight: bold; } 
+code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.kw { color: #007020; font-weight: bold; } 
+code span.op { color: #666666; } 
+code span.ot { color: #007020; } 
+code span.pp { color: #bc7a00; } 
+code span.sc { color: #4070a0; } 
+code span.ss { color: #bb6688; } 
+code span.st { color: #4070a0; } 
+code span.va { color: #19177c; } 
+code span.vs { color: #4070a0; } 
+code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } 
+</style>
+<script>
+// apply pandoc div.sourceCode style to pre.sourceCode instead
+(function() {
+  var sheets = document.styleSheets;
+  for (var i = 0; i < sheets.length; i++) {
+    if (sheets[i].ownerNode.dataset["origin"] !== "pandoc") continue;
+    try { var rules = sheets[i].cssRules; } catch (e) { continue; }
+    var j = 0;
+    while (j < rules.length) {
+      var rule = rules[j];
+      // check if there is a div.sourceCode rule
+      if (rule.type !== rule.STYLE_RULE || rule.selectorText !== "div.sourceCode") {
+        j++;
+        continue;
+      }
+      var style = rule.style.cssText;
+      // check if color or background-color is set
+      if (rule.style.color === '' && rule.style.backgroundColor === '') {
+        j++;
+        continue;
+      }
+      // replace div.sourceCode by a pre.sourceCode rule
+      sheets[i].deleteRule(j);
+      sheets[i].insertRule('pre.sourceCode{' + style + '}', j);
+    }
+  }
+})();
+</script>
+
+
+
+
+<style type="text/css">body {
+background-color: #fff;
+margin: 1em auto;
+max-width: 700px;
+overflow: visible;
+padding-left: 2em;
+padding-right: 2em;
+font-family: "Open Sans", "Helvetica Neue", Helvetica, Arial, sans-serif;
+font-size: 14px;
+line-height: 1.35;
+}
+#TOC {
+clear: both;
+margin: 0 0 10px 10px;
+padding: 4px;
+width: 400px;
+border: 1px solid #CCCCCC;
+border-radius: 5px;
+background-color: #f6f6f6;
+font-size: 13px;
+line-height: 1.3;
+}
+#TOC .toctitle {
+font-weight: bold;
+font-size: 15px;
+margin-left: 5px;
+}
+#TOC ul {
+padding-left: 40px;
+margin-left: -1.5em;
+margin-top: 5px;
+margin-bottom: 5px;
+}
+#TOC ul ul {
+margin-left: -2em;
+}
+#TOC li {
+line-height: 16px;
+}
+table {
+margin: 1em auto;
+border-width: 1px;
+border-color: #DDDDDD;
+border-style: outset;
+border-collapse: collapse;
+}
+table th {
+border-width: 2px;
+padding: 5px;
+border-style: inset;
+}
+table td {
+border-width: 1px;
+border-style: inset;
+line-height: 18px;
+padding: 5px 5px;
+}
+table, table th, table td {
+border-left-style: none;
+border-right-style: none;
+}
+table thead, table tr.even {
+background-color: #f7f7f7;
+}
+p {
+margin: 0.5em 0;
+}
+blockquote {
+background-color: #f6f6f6;
+padding: 0.25em 0.75em;
+}
+hr {
+border-style: solid;
+border: none;
+border-top: 1px solid #777;
+margin: 28px 0;
+}
+dl {
+margin-left: 0;
+}
+dl dd {
+margin-bottom: 13px;
+margin-left: 13px;
+}
+dl dt {
+font-weight: bold;
+}
+ul {
+margin-top: 0;
+}
+ul li {
+list-style: circle outside;
+}
+ul ul {
+margin-bottom: 0;
+}
+pre, code {
+background-color: #f7f7f7;
+border-radius: 3px;
+color: #333;
+white-space: pre-wrap; 
+}
+pre {
+border-radius: 3px;
+margin: 5px 0px 10px 0px;
+padding: 10px;
+}
+pre:not([class]) {
+background-color: #f7f7f7;
+}
+code {
+font-family: Consolas, Monaco, 'Courier New', monospace;
+font-size: 85%;
+}
+p > code, li > code {
+padding: 2px 0px;
+}
+div.figure {
+text-align: center;
+}
+img {
+background-color: #FFFFFF;
+padding: 2px;
+border: 1px solid #DDDDDD;
+border-radius: 3px;
+border: 1px solid #CCCCCC;
+margin: 0 5px;
+}
+h1 {
+margin-top: 0;
+font-size: 35px;
+line-height: 40px;
+}
+h2 {
+border-bottom: 4px solid #f7f7f7;
+padding-top: 10px;
+padding-bottom: 2px;
+font-size: 145%;
+}
+h3 {
+border-bottom: 2px solid #f7f7f7;
+padding-top: 10px;
+font-size: 120%;
+}
+h4 {
+border-bottom: 1px solid #f7f7f7;
+margin-left: 8px;
+font-size: 105%;
+}
+h5, h6 {
+border-bottom: 1px solid #ccc;
+font-size: 105%;
+}
+a {
+color: #0033dd;
+text-decoration: none;
+}
+a:hover {
+color: #6666ff; }
+a:visited {
+color: #800080; }
+a:visited:hover {
+color: #BB00BB; }
+a[href^="http:"] {
+text-decoration: underline; }
+a[href^="https:"] {
+text-decoration: underline; }
+
+code > span.kw { color: #555; font-weight: bold; } 
+code > span.dt { color: #902000; } 
+code > span.dv { color: #40a070; } 
+code > span.bn { color: #d14; } 
+code > span.fl { color: #d14; } 
+code > span.ch { color: #d14; } 
+code > span.st { color: #d14; } 
+code > span.co { color: #888888; font-style: italic; } 
+code > span.ot { color: #007020; } 
+code > span.al { color: #ff0000; font-weight: bold; } 
+code > span.fu { color: #900; font-weight: bold; } 
+code > span.er { color: #a61717; background-color: #e3d2d2; } 
+</style>
+
+
+
+
+</head>
+
+<body>
+
+
+
+
+<h1 class="title toc-ignore">Optimizing the Matching Process with a
+Random Search Algorithm</h1>
+
+
+
+<div id="practical-example-optimizing-the-matching-process" class="section level1">
+<h1>Practical Example: Optimizing the Matching Process</h1>
+<p>Matching observations based on generalized propensity scores involves
+tuning multiple hyperparameters. Running separate workflows with
+different parameter combinations can be tedious, and the effects of some
+parameters are not always predictable. To streamline this process,
+vecmatch provides an automated optimization workflow using a random
+search algorithm. The function <code>optimize_gps()</code> is
+implemented with multithreading to leverage computational resources
+efficiently.</p>
+<p>Step 1: Define the Formula, Data, and Optimization Space</p>
+<p>In this example, we use the built-in <code>cancer</code> dataset and
+focus on two predictors: the categorical variable <code>sex</code> and
+the continuous variable <code>age</code>. We first specify the model
+formula. Note that <code>data</code> and <code>formula</code> are fixed
+inputs; if you want to compare different formulas, you must run the
+workflow separately for each.</p>
+<p>Next, we define the search space for the hyperparameters. The helper
+function <code>make_opt_args()</code> validates your inputs and computes
+the Cartesian product of all specified values, reporting the total
+number of parameter combinations.</p>
+<div class="sourceCode" id="cb1"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" tabindex="-1"></a>opt_args <span class="ot">&lt;-</span> <span class="fu">make_opt_args</span>(</span>
+<span id="cb1-2"><a href="#cb1-2" tabindex="-1"></a>  <span class="at">data            =</span> cancer,</span>
+<span id="cb1-3"><a href="#cb1-3" tabindex="-1"></a>  <span class="at">formula         =</span> formula_cancer,</span>
+<span id="cb1-4"><a href="#cb1-4" tabindex="-1"></a>  <span class="at">reference       =</span> <span class="fu">c</span>(<span class="st">&quot;control&quot;</span>, <span class="st">&quot;adenoma&quot;</span>, <span class="st">&quot;crc_beningn&quot;</span>, <span class="st">&quot;crc_malignant&quot;</span>),</span>
+<span id="cb1-5"><a href="#cb1-5" tabindex="-1"></a>  <span class="at">gps_method      =</span> <span class="fu">c</span>(<span class="st">&quot;m1&quot;</span>, <span class="st">&quot;m7&quot;</span>, <span class="st">&quot;m8&quot;</span>),</span>
+<span id="cb1-6"><a href="#cb1-6" tabindex="-1"></a>  <span class="at">matching_method =</span> <span class="fu">c</span>(<span class="st">&quot;fullopt&quot;</span>, <span class="st">&quot;nnm&quot;</span>),</span>
+<span id="cb1-7"><a href="#cb1-7" tabindex="-1"></a>  <span class="at">caliper         =</span> <span class="fu">seq</span>(<span class="fl">0.01</span>, <span class="dv">5</span>, <span class="fl">0.01</span>),</span>
+<span id="cb1-8"><a href="#cb1-8" tabindex="-1"></a>  <span class="at">cluster         =</span> <span class="dv">1</span><span class="sc">:</span><span class="dv">3</span>,</span>
+<span id="cb1-9"><a href="#cb1-9" tabindex="-1"></a>  <span class="at">ratio           =</span> <span class="dv">1</span><span class="sc">:</span><span class="dv">3</span>,</span>
+<span id="cb1-10"><a href="#cb1-10" tabindex="-1"></a>  <span class="at">min_controls    =</span> <span class="dv">1</span><span class="sc">:</span><span class="dv">3</span>,</span>
+<span id="cb1-11"><a href="#cb1-11" tabindex="-1"></a>  <span class="at">max_controls    =</span> <span class="dv">1</span><span class="sc">:</span><span class="dv">3</span></span>
+<span id="cb1-12"><a href="#cb1-12" tabindex="-1"></a>)</span>
+<span id="cb1-13"><a href="#cb1-13" tabindex="-1"></a></span>
+<span id="cb1-14"><a href="#cb1-14" tabindex="-1"></a>opt_args</span>
+<span id="cb1-15"><a href="#cb1-15" tabindex="-1"></a><span class="co">#&gt; Optimization Argument Set (class: opt_args)</span></span>
+<span id="cb1-16"><a href="#cb1-16" tabindex="-1"></a><span class="co">#&gt; ---------------------------------------- </span></span>
+<span id="cb1-17"><a href="#cb1-17" tabindex="-1"></a><span class="co">#&gt; gps_method      : m1, m7, m8</span></span>
+<span id="cb1-18"><a href="#cb1-18" tabindex="-1"></a><span class="co">#&gt; reference       : control, adenoma, crc_beningn, crc_malignant</span></span>
+<span id="cb1-19"><a href="#cb1-19" tabindex="-1"></a><span class="co">#&gt; matching_method : fullopt, nnm</span></span>
+<span id="cb1-20"><a href="#cb1-20" tabindex="-1"></a><span class="co">#&gt; caliper         : [500 values]</span></span>
+<span id="cb1-21"><a href="#cb1-21" tabindex="-1"></a><span class="co">#&gt; order           : desc, asc, original, random</span></span>
+<span id="cb1-22"><a href="#cb1-22" tabindex="-1"></a><span class="co">#&gt; cluster         : 1, 2, 3</span></span>
+<span id="cb1-23"><a href="#cb1-23" tabindex="-1"></a><span class="co">#&gt; replace         : TRUE, FALSE</span></span>
+<span id="cb1-24"><a href="#cb1-24" tabindex="-1"></a><span class="co">#&gt; ties            : TRUE, FALSE</span></span>
+<span id="cb1-25"><a href="#cb1-25" tabindex="-1"></a><span class="co">#&gt; ratio           : 1, 2, 3</span></span>
+<span id="cb1-26"><a href="#cb1-26" tabindex="-1"></a><span class="co">#&gt; min_controls    : 1, 2, 3</span></span>
+<span id="cb1-27"><a href="#cb1-27" tabindex="-1"></a><span class="co">#&gt; max_controls    : 1, 2, 3</span></span>
+<span id="cb1-28"><a href="#cb1-28" tabindex="-1"></a><span class="co">#&gt; ---------------------------------------- </span></span>
+<span id="cb1-29"><a href="#cb1-29" tabindex="-1"></a><span class="co">#&gt; Total combinations: 1512000</span></span></code></pre></div>
+<p>The <code>print()</code> method for <code>make_opt_args()</code>
+provides a clear summary of the search space, including each
+hyperparameter’s values and the total number of combinations.</p>
+</div>
+<div id="step-2-run-the-optimizer" class="section level1">
+<h1>Step 2: Run the Optimizer</h1>
+<p>With the search space defined, we can launch the optimization. The
+<code>optimize_gps()</code> function performs a random search across the
+parameter grid and returns a summary table containing key quality
+metrics for each tested combination. You control the number of
+iterations via the <code>n_iter</code> argument.</p>
+<p>The function uses multithreading (via the <code>future</code>
+package) to parallelize work. As a guideline, aim for at least 1000–1500
+iterations per core for reliable search coverage. Monitor your system’s
+memory usage, since the parallel backend can consume substantial
+RAM.</p>
+<p>The function automatically registers a multisession backend and,
+after computing and matching the GPS with <code>foreach</code> and
+<code>doRNG</code>, it cleans up the parallel workers to free memory. In
+a future release, we plan to allow users to select alternative backends,
+such as an external compute cluster, for greater flexibility.</p>
+<p>By default, <code>optimize_gps()</code> preserves the global random
+seed. For reproducibility, set a seed before calling the optimizer.</p>
+<div class="sourceCode" id="cb2"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" tabindex="-1"></a><span class="fu">set.seed</span>(<span class="dv">167894</span>)</span>
+<span id="cb2-2"><a href="#cb2-2" tabindex="-1"></a>seed_before <span class="ot">&lt;-</span> .Random.seed</span>
+<span id="cb2-3"><a href="#cb2-3" tabindex="-1"></a></span>
+<span id="cb2-4"><a href="#cb2-4" tabindex="-1"></a>opt_results <span class="ot">&lt;-</span> <span class="fu">optimize_gps</span>(</span>
+<span id="cb2-5"><a href="#cb2-5" tabindex="-1"></a>  <span class="at">data     =</span> cancer,</span>
+<span id="cb2-6"><a href="#cb2-6" tabindex="-1"></a>  <span class="at">formula  =</span> formula_cancer,</span>
+<span id="cb2-7"><a href="#cb2-7" tabindex="-1"></a>  <span class="at">opt_args =</span> opt_args,</span>
+<span id="cb2-8"><a href="#cb2-8" tabindex="-1"></a>  <span class="at">n_iter   =</span> <span class="dv">1500</span></span>
+<span id="cb2-9"><a href="#cb2-9" tabindex="-1"></a>)</span>
+<span id="cb2-10"><a href="#cb2-10" tabindex="-1"></a><span class="co">#&gt; Best Optimization Results by SMD Group</span></span>
+<span id="cb2-11"><a href="#cb2-11" tabindex="-1"></a><span class="co">#&gt; ======================================</span></span>
+<span id="cb2-12"><a href="#cb2-12" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb2-13"><a href="#cb2-13" tabindex="-1"></a><span class="co">#&gt; ------------------------------------------------------- </span></span>
+<span id="cb2-14"><a href="#cb2-14" tabindex="-1"></a><span class="co">#&gt; | smd_group  | unique_configs |  smd   | perc_matched |</span></span>
+<span id="cb2-15"><a href="#cb2-15" tabindex="-1"></a><span class="co">#&gt; ------------------------------------------------------- </span></span>
+<span id="cb2-16"><a href="#cb2-16" tabindex="-1"></a><span class="co">#&gt; |0-0.05      |               1|   0.038|         79.07|</span></span>
+<span id="cb2-17"><a href="#cb2-17" tabindex="-1"></a><span class="co">#&gt; |0.05-0.10   |               1|   0.086|          79.4|</span></span>
+<span id="cb2-18"><a href="#cb2-18" tabindex="-1"></a><span class="co">#&gt; |0.10-0.15   |               1|   0.145|          91.2|</span></span>
+<span id="cb2-19"><a href="#cb2-19" tabindex="-1"></a><span class="co">#&gt; |0.15-0.20   |               2|   0.191|         95.68|</span></span>
+<span id="cb2-20"><a href="#cb2-20" tabindex="-1"></a><span class="co">#&gt; |0.20-0.25   |               1|   0.213|         93.19|</span></span>
+<span id="cb2-21"><a href="#cb2-21" tabindex="-1"></a><span class="co">#&gt; |0.25-0.30   |               1|    0.25|         73.39|</span></span>
+<span id="cb2-22"><a href="#cb2-22" tabindex="-1"></a><span class="co">#&gt; |&gt;0.30       |               1|   0.359|         62.81|</span></span>
+<span id="cb2-23"><a href="#cb2-23" tabindex="-1"></a><span class="co">#&gt; ------------------------------------------------------- </span></span>
+<span id="cb2-24"><a href="#cb2-24" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb2-25"><a href="#cb2-25" tabindex="-1"></a><span class="co">#&gt; Optimization Summary</span></span>
+<span id="cb2-26"><a href="#cb2-26" tabindex="-1"></a><span class="co">#&gt; --------------------</span></span>
+<span id="cb2-27"><a href="#cb2-27" tabindex="-1"></a><span class="co">#&gt; Total combinations tested  : 1500</span></span>
+<span id="cb2-28"><a href="#cb2-28" tabindex="-1"></a><span class="co">#&gt; Total optimization time [s]: 91.09</span></span></code></pre></div>
+<p>We ran the optimization on a single core with
+<code>n_iter = 1500</code>; on our test machine this required 91.09
+seconds. Given the size of the parameter grid, increasing
+<code>n_iter</code> would improve the search’s coverage, but here we
+limited iterations to keep the vignette’s build time reasonable.</p>
+<p>When you print <code>opt_results</code>, it summarizes the entire
+search by grouping parameter sets into bins defined by their maximum
+standardized mean difference (SMD), and within each bin it highlights
+the combination that achieves the highest proportion of matched
+observations.</p>
+</div>
+<div id="step-3-select-optimal-configurations" class="section level1">
+<h1>Step 3: Select Optimal Configurations</h1>
+<p>After optimization, <code>select_opt()</code> helps you choose
+parameter combinations that meet your specific objectives. For example,
+you may wish to maximize the number of matched samples for certain
+treatment groups while minimizing imbalance on key covariates.</p>
+<p>In this example, we aim to: * Retain the largest possible number of
+observations in the <code>adenoma</code> and <code>crc_malignant</code>
+groups. * Minimize the standardized mean difference (SMD) for the
+<code>age</code> variable.</p>
+<p>We can achieve this by specifying arguments in
+<code>select_opt()</code>:</p>
+<div class="sourceCode" id="cb3"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" tabindex="-1"></a>select_results <span class="ot">&lt;-</span> <span class="fu">select_opt</span>(opt_results,</span>
+<span id="cb3-2"><a href="#cb3-2" tabindex="-1"></a>  <span class="at">perc_matched =</span> <span class="fu">c</span>(<span class="st">&quot;adenoma&quot;</span>, <span class="st">&quot;crc_malignant&quot;</span>),</span>
+<span id="cb3-3"><a href="#cb3-3" tabindex="-1"></a>  <span class="at">smd_variables =</span> <span class="st">&quot;age&quot;</span>,</span>
+<span id="cb3-4"><a href="#cb3-4" tabindex="-1"></a>  <span class="at">smd_type =</span> <span class="st">&quot;max&quot;</span></span>
+<span id="cb3-5"><a href="#cb3-5" tabindex="-1"></a>)</span>
+<span id="cb3-6"><a href="#cb3-6" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb3-7"><a href="#cb3-7" tabindex="-1"></a><span class="co">#&gt; Optimization Selection Summary</span></span>
+<span id="cb3-8"><a href="#cb3-8" tabindex="-1"></a><span class="co">#&gt; ====================</span></span>
+<span id="cb3-9"><a href="#cb3-9" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb3-10"><a href="#cb3-10" tabindex="-1"></a><span class="co">#&gt; ------------------------------------------------------- </span></span>
+<span id="cb3-11"><a href="#cb3-11" tabindex="-1"></a><span class="co">#&gt; | smd_group  | unique_configs |  smd   | perc_matched |</span></span>
+<span id="cb3-12"><a href="#cb3-12" tabindex="-1"></a><span class="co">#&gt; ------------------------------------------------------- </span></span>
+<span id="cb3-13"><a href="#cb3-13" tabindex="-1"></a><span class="co">#&gt; |0-0.05      |               1|   0.043|       162.957|</span></span>
+<span id="cb3-14"><a href="#cb3-14" tabindex="-1"></a><span class="co">#&gt; |0.05-0.10   |               1|   0.099|       176.715|</span></span>
+<span id="cb3-15"><a href="#cb3-15" tabindex="-1"></a><span class="co">#&gt; |0.10-0.15   |               1|   0.145|       189.474|</span></span>
+<span id="cb3-16"><a href="#cb3-16" tabindex="-1"></a><span class="co">#&gt; |0.15-0.20   |               2|   0.191|       194.611|</span></span>
+<span id="cb3-17"><a href="#cb3-17" tabindex="-1"></a><span class="co">#&gt; |0.20-0.25   |               1|   0.213|       190.179|</span></span>
+<span id="cb3-18"><a href="#cb3-18" tabindex="-1"></a><span class="co">#&gt; |0.25-0.30   |               1|    0.25|       148.874|</span></span>
+<span id="cb3-19"><a href="#cb3-19" tabindex="-1"></a><span class="co">#&gt; |0.30-0.35   |               1|   0.321|        99.426|</span></span>
+<span id="cb3-20"><a href="#cb3-20" tabindex="-1"></a><span class="co">#&gt; |0.35-0.40   |               1|   0.356|        94.214|</span></span>
+<span id="cb3-21"><a href="#cb3-21" tabindex="-1"></a><span class="co">#&gt; |0.40-0.45   |               1|   0.429|       113.729|</span></span>
+<span id="cb3-22"><a href="#cb3-22" tabindex="-1"></a><span class="co">#&gt; |0.45-0.50   |               1|   0.475|       111.038|</span></span>
+<span id="cb3-23"><a href="#cb3-23" tabindex="-1"></a><span class="co">#&gt; |&gt;0.50       |               1|   0.551|       127.861|</span></span>
+<span id="cb3-24"><a href="#cb3-24" tabindex="-1"></a><span class="co">#&gt; -------------------------------------------------------</span></span></code></pre></div>
+<p>The output shows the SMD bins and highlights the combination within
+each bin that best meets our criteria. Suppose the configuration in the
+<code>0.10–0.15</code> SMD bin offers a desirable balance of matched
+samples; we can extract its parameters for manual refitting.</p>
+</div>
+<div id="step-4-refit-the-optimized-model-manually" class="section level1">
+<h1>Step 4: Refit the Optimized Model Manually</h1>
+<p>To inspect the matched dataset and detailed balance summaries, we
+rerun the standard <code>vecmatch</code> workflow using the selected
+parameters.</p>
+<ol style="list-style-type: decimal">
+<li>Extract the parameter data frame and filter the chosen SMD bin:</li>
+</ol>
+<div class="sourceCode" id="cb4"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" tabindex="-1"></a>param_df <span class="ot">&lt;-</span> <span class="fu">attr</span>(select_results, <span class="st">&quot;param_df&quot;</span>)</span>
+<span id="cb4-2"><a href="#cb4-2" tabindex="-1"></a></span>
+<span id="cb4-3"><a href="#cb4-3" tabindex="-1"></a><span class="fu">subset</span>(param_df, smd_group <span class="sc">==</span> <span class="st">&quot;0.10-0.15&quot;</span>)</span>
+<span id="cb4-4"><a href="#cb4-4" tabindex="-1"></a><span class="co">#&gt;   iter_ID  gps_model method_match caliper order kmeans_cluster replace ties</span></span>
+<span id="cb4-5"><a href="#cb4-5" tabindex="-1"></a><span class="co">#&gt; 6   ID565 estimate_4          nnm    4.29   asc              1    TRUE TRUE</span></span>
+<span id="cb4-6"><a href="#cb4-6" tabindex="-1"></a><span class="co">#&gt;   ratio min_controls max_controls reference p_control p_adenoma.x p_crc_beningn</span></span>
+<span id="cb4-7"><a href="#cb4-7" tabindex="-1"></a><span class="co">#&gt; 6     2           NA           NA   adenoma  87.22045         100      85.23985</span></span>
+<span id="cb4-8"><a href="#cb4-8" tabindex="-1"></a><span class="co">#&gt;   p_crc_malignant.x method_gps              link      age overall_stat</span></span>
+<span id="cb4-9"><a href="#cb4-9" tabindex="-1"></a><span class="co">#&gt; 6          89.47368   multinom generalized_logit 0.144529     0.144529</span></span>
+<span id="cb4-10"><a href="#cb4-10" tabindex="-1"></a><span class="co">#&gt;   smd_group p_adenoma.y p_crc_malignant.y</span></span>
+<span id="cb4-11"><a href="#cb4-11" tabindex="-1"></a><span class="co">#&gt; 6 0.10-0.15         100          89.47368</span></span></code></pre></div>
+<ol start="2" style="list-style-type: decimal">
+<li>Use these values to call <code>estimate_gps()</code> and
+<code>match_gps()</code>. For example:</li>
+</ol>
+<div class="sourceCode" id="cb5"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" tabindex="-1"></a><span class="co"># estimating gps</span></span>
+<span id="cb5-2"><a href="#cb5-2" tabindex="-1"></a>gps_mat <span class="ot">&lt;-</span> <span class="fu">estimate_gps</span>(formula_cancer,</span>
+<span id="cb5-3"><a href="#cb5-3" tabindex="-1"></a>  cancer,</span>
+<span id="cb5-4"><a href="#cb5-4" tabindex="-1"></a>  <span class="at">method =</span> <span class="st">&quot;multinom&quot;</span>,</span>
+<span id="cb5-5"><a href="#cb5-5" tabindex="-1"></a>  <span class="at">link =</span> <span class="st">&quot;generalized_logit&quot;</span>,</span>
+<span id="cb5-6"><a href="#cb5-6" tabindex="-1"></a>  <span class="at">reference =</span> <span class="st">&quot;adenoma&quot;</span></span>
+<span id="cb5-7"><a href="#cb5-7" tabindex="-1"></a>)</span></code></pre></div>
+<div class="sourceCode" id="cb6"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" tabindex="-1"></a><span class="co"># csr with refitting</span></span>
+<span id="cb6-2"><a href="#cb6-2" tabindex="-1"></a>csr_mat <span class="ot">&lt;-</span> <span class="fu">csregion</span>(gps_mat)</span>
+<span id="cb6-3"><a href="#cb6-3" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb6-4"><a href="#cb6-4" tabindex="-1"></a><span class="co">#&gt; Rectangular CSR Borders Evaluation </span></span>
+<span id="cb6-5"><a href="#cb6-5" tabindex="-1"></a><span class="co">#&gt; ==================================</span></span>
+<span id="cb6-6"><a href="#cb6-6" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb6-7"><a href="#cb6-7" tabindex="-1"></a><span class="co">#&gt; Treatment       | Lower CSR limit | Upper CSR limit | Number excluded </span></span>
+<span id="cb6-8"><a href="#cb6-8" tabindex="-1"></a><span class="co">#&gt; -------------------------------------------------------------------- </span></span>
+<span id="cb6-9"><a href="#cb6-9" tabindex="-1"></a><span class="co">#&gt; adenoma         | 0.2185785       | 0.3541997       | 10              </span></span>
+<span id="cb6-10"><a href="#cb6-10" tabindex="-1"></a><span class="co">#&gt; control         | 0.1710161       | 0.3226619       | 12              </span></span>
+<span id="cb6-11"><a href="#cb6-11" tabindex="-1"></a><span class="co">#&gt; crc_beningn     | 0.1766004       | 0.2903609       | 13              </span></span>
+<span id="cb6-12"><a href="#cb6-12" tabindex="-1"></a><span class="co">#&gt; crc_malignant   | 0.1384517       | 0.2641614       | 11              </span></span>
+<span id="cb6-13"><a href="#cb6-13" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb6-14"><a href="#cb6-14" tabindex="-1"></a><span class="co">#&gt; ===================================================</span></span>
+<span id="cb6-15"><a href="#cb6-15" tabindex="-1"></a><span class="co">#&gt; The total number of excluded observations is:     20 </span></span>
+<span id="cb6-16"><a href="#cb6-16" tabindex="-1"></a><span class="co">#&gt; Note: You can view the summary of the CSR calculation using the  `attr()` function.</span></span>
+<span id="cb6-17"><a href="#cb6-17" tabindex="-1"></a></span>
+<span id="cb6-18"><a href="#cb6-18" tabindex="-1"></a><span class="co"># matching</span></span>
+<span id="cb6-19"><a href="#cb6-19" tabindex="-1"></a>matched_df <span class="ot">&lt;-</span> <span class="fu">match_gps</span>(csr_mat,</span>
+<span id="cb6-20"><a href="#cb6-20" tabindex="-1"></a>  <span class="at">method =</span> <span class="st">&quot;nnm&quot;</span>,</span>
+<span id="cb6-21"><a href="#cb6-21" tabindex="-1"></a>  <span class="at">caliper =</span> <span class="fl">4.29</span>,</span>
+<span id="cb6-22"><a href="#cb6-22" tabindex="-1"></a>  <span class="at">reference =</span> <span class="st">&quot;adenoma&quot;</span>,</span>
+<span id="cb6-23"><a href="#cb6-23" tabindex="-1"></a>  <span class="at">ratio =</span> <span class="dv">2</span>,</span>
+<span id="cb6-24"><a href="#cb6-24" tabindex="-1"></a>  <span class="at">order =</span> <span class="st">&quot;asc&quot;</span>,</span>
+<span id="cb6-25"><a href="#cb6-25" tabindex="-1"></a>  <span class="at">replace =</span> <span class="cn">TRUE</span>,</span>
+<span id="cb6-26"><a href="#cb6-26" tabindex="-1"></a>  <span class="at">ties =</span> <span class="cn">TRUE</span>,</span>
+<span id="cb6-27"><a href="#cb6-27" tabindex="-1"></a>  <span class="at">kmeans_cluster =</span> <span class="dv">1</span></span>
+<span id="cb6-28"><a href="#cb6-28" tabindex="-1"></a>)</span></code></pre></div>
+<ol start="3" style="list-style-type: decimal">
+<li>Evaluate balance and verify reproducibility:</li>
+</ol>
+<div class="sourceCode" id="cb7"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" tabindex="-1"></a><span class="fu">balqual</span>(matched_df,</span>
+<span id="cb7-2"><a href="#cb7-2" tabindex="-1"></a>  <span class="at">formula =</span> formula_cancer,</span>
+<span id="cb7-3"><a href="#cb7-3" tabindex="-1"></a>  <span class="at">type =</span> <span class="st">&quot;smd&quot;</span>,</span>
+<span id="cb7-4"><a href="#cb7-4" tabindex="-1"></a>  <span class="at">statistic =</span> <span class="st">&quot;max&quot;</span>,</span>
+<span id="cb7-5"><a href="#cb7-5" tabindex="-1"></a>  <span class="at">round =</span> <span class="dv">3</span>,</span>
+<span id="cb7-6"><a href="#cb7-6" tabindex="-1"></a>  <span class="at">cutoffs =</span> <span class="fl">0.2</span></span>
+<span id="cb7-7"><a href="#cb7-7" tabindex="-1"></a>)</span>
+<span id="cb7-8"><a href="#cb7-8" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb7-9"><a href="#cb7-9" tabindex="-1"></a><span class="co">#&gt; Matching Quality Evaluation</span></span>
+<span id="cb7-10"><a href="#cb7-10" tabindex="-1"></a><span class="co">#&gt; ================================================================================ </span></span>
+<span id="cb7-11"><a href="#cb7-11" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb7-12"><a href="#cb7-12" tabindex="-1"></a><span class="co">#&gt; Count table for the treatment variable:</span></span>
+<span id="cb7-13"><a href="#cb7-13" tabindex="-1"></a><span class="co">#&gt; -------------------------------------------------- </span></span>
+<span id="cb7-14"><a href="#cb7-14" tabindex="-1"></a><span class="co">#&gt; Treatment                 | Before     | After      </span></span>
+<span id="cb7-15"><a href="#cb7-15" tabindex="-1"></a><span class="co">#&gt; -------------------------------------------------- </span></span>
+<span id="cb7-16"><a href="#cb7-16" tabindex="-1"></a><span class="co">#&gt; adenoma                   | 373        | 373        </span></span>
+<span id="cb7-17"><a href="#cb7-17" tabindex="-1"></a><span class="co">#&gt; control                   | 313        | 273        </span></span>
+<span id="cb7-18"><a href="#cb7-18" tabindex="-1"></a><span class="co">#&gt; crc_beningn               | 271        | 231        </span></span>
+<span id="cb7-19"><a href="#cb7-19" tabindex="-1"></a><span class="co">#&gt; crc_malignant             | 247        | 221        </span></span>
+<span id="cb7-20"><a href="#cb7-20" tabindex="-1"></a><span class="co">#&gt; -------------------------------------------------- </span></span>
+<span id="cb7-21"><a href="#cb7-21" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb7-22"><a href="#cb7-22" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb7-23"><a href="#cb7-23" tabindex="-1"></a><span class="co">#&gt; Matching summary statistics:</span></span>
+<span id="cb7-24"><a href="#cb7-24" tabindex="-1"></a><span class="co">#&gt; ---------------------------------------- </span></span>
+<span id="cb7-25"><a href="#cb7-25" tabindex="-1"></a><span class="co">#&gt; Total n before matching:  1204 </span></span>
+<span id="cb7-26"><a href="#cb7-26" tabindex="-1"></a><span class="co">#&gt; Total n after matching:       1098 </span></span>
+<span id="cb7-27"><a href="#cb7-27" tabindex="-1"></a><span class="co">#&gt; % of matched observations:    91.20 %</span></span>
+<span id="cb7-28"><a href="#cb7-28" tabindex="-1"></a><span class="co">#&gt; Total  maximal   SMD value:   0.145 </span></span>
+<span id="cb7-29"><a href="#cb7-29" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb7-30"><a href="#cb7-30" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb7-31"><a href="#cb7-31" tabindex="-1"></a><span class="co">#&gt; Maximal values :</span></span>
+<span id="cb7-32"><a href="#cb7-32" tabindex="-1"></a><span class="co">#&gt; -------------------------------------------------------------------------------- </span></span>
+<span id="cb7-33"><a href="#cb7-33" tabindex="-1"></a><span class="co">#&gt; Variable                  | Coef  | Before       | After        | Quality      </span></span>
+<span id="cb7-34"><a href="#cb7-34" tabindex="-1"></a><span class="co">#&gt; -------------------------------------------------------------------------------- </span></span>
+<span id="cb7-35"><a href="#cb7-35" tabindex="-1"></a><span class="co">#&gt; age                       | SMD   | 0.215        | 0.145        | Balanced     </span></span>
+<span id="cb7-36"><a href="#cb7-36" tabindex="-1"></a><span class="co">#&gt; sexF                      | SMD   | 0.148        | 0.117        | Balanced     </span></span>
+<span id="cb7-37"><a href="#cb7-37" tabindex="-1"></a><span class="co">#&gt; sexM                      | SMD   | 0.148        | 0.117        | Balanced     </span></span>
+<span id="cb7-38"><a href="#cb7-38" tabindex="-1"></a><span class="co">#&gt; age:sexF                  | SMD   | 0.155        | 0.122        | Balanced     </span></span>
+<span id="cb7-39"><a href="#cb7-39" tabindex="-1"></a><span class="co">#&gt; age:sexM                  | SMD   | 0.159        | 0.136        | Balanced     </span></span>
+<span id="cb7-40"><a href="#cb7-40" tabindex="-1"></a><span class="co">#&gt; --------------------------------------------------------------------------------</span></span>
+<span id="cb7-41"><a href="#cb7-41" tabindex="-1"></a></span>
+<span id="cb7-42"><a href="#cb7-42" tabindex="-1"></a><span class="fu">all.equal</span>(seed_before, .Random.seed)</span>
+<span id="cb7-43"><a href="#cb7-43" tabindex="-1"></a><span class="co">#&gt; [1] TRUE</span></span></code></pre></div>
+</div>
+
+
+
+<!-- code folding -->
+
+
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+  (function () {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    script.src  = "https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML";
+    document.getElementsByTagName("head")[0].appendChild(script);
+  })();
+</script>
+
+</body>
+</html>
