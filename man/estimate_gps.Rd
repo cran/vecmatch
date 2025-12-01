@@ -2,7 +2,7 @@
 % Please edit documentation in R/estimate_gps.R
 \name{estimate_gps}
 \alias{estimate_gps}
-\title{Calculate treatment allocation probabilities}
+\title{Calculate Treatment Allocation Probabilities}
 \usage{
 estimate_gps(
   formula,
@@ -66,11 +66,11 @@ examples refer to the Details section and documentations of corresponding
 functions.}
 }
 \value{
-A numeric matrix of class \code{gps} with the number of columns equal to
+A data frame of class \code{gps} with the number of columns equal to
 the number of unique treatment variable levels plus one (for the treatment
-variable itself) and the number of row equal to the number of subjects in
+variable itself) and the number of rows equal to the number of subjects in
 the initial dataset. The original dataset used for estimation can be
-accessed as \code{original_data} attribute.
+accessed as the \code{original_data} attribute.
 }
 \description{
 \code{estimate_gps()} computes generalized propensity scores for
@@ -102,43 +102,75 @@ Available options: \code{link = c("logistic", "probit", "loglog", "cloglog",   "
 }
 \examples{
 
-library("brglm2")
+## Example 1: multinomial bias-reduced model (brglm2) on `airquality`
+if (requireNamespace("brglm2", quietly = TRUE)) {
+  library(brglm2)
 
-# Conducting covariate balancing on the `airquality` dataset. Our goal was to
-# compare ozone levels by month, but we discovered that ozone levels are
-# strongly correlated with wind intensity (measured in mph), and the average
-# wind intensity varies across months. Therefore, we need to balance the
-# months by wind values to ensure a valid comparison of ozone levels.
+  # Initial imbalance of means
+  tapply(airquality$Wind, airquality$Month, mean, na.rm = TRUE)
 
-# Initial imbalance of means
-tapply(airquality$Wind, airquality$Month, mean)
+  # Formula definition
+  formula_air <- Month ~ Wind
 
-# Formula definition
-formula_air <- formula(Month ~ Wind)
+  # Estimating the generalized propensity scores using brglm2
+  gp_scores <- estimate_gps(
+    formula_air,
+    data = airquality,
+    method = "brglm2",
+    reference = "5",
+    verbose_output = TRUE,
+    control = brglm2::brglmControl(type = "MPL_Jeffreys")
+  )
 
-# Estimating the generalized propensity scores using brglm2 method using
-# maximum penalized likelihood estimators with powers of the Jeffreys
-gp_scores <- estimate_gps(formula_air,
-  data = airquality, method = "brglm2",
-  reference = "5", verbose_output = TRUE,
-  control = brglmControl(type = "MPL_Jeffreys")
-)
+  # Filtering the observations outside the csr region
+  gps_csr <- csregion(gp_scores)
+  filter_which <- attr(gps_csr, "filter_vector")
+  filtered_air <- airquality[filter_which, ]
 
-# Filtering the observations outside the csr region
-gps_csr <- csregion(gp_scores)
+  # Imbalance after csr
+  tapply(filtered_air$Wind, filtered_air$Month, mean, na.rm = TRUE)
 
-# Calculating imbalance after csr
-filter_which <- attr(gps_csr, "filter_vector")
-filtered_air <- airquality[filter_which, ]
+  # Visual inspection using raincloud
+  raincloud(
+    filtered_air,
+    y = Wind,
+    group = Month,
+    significance = "t_test"
+  )
+}
 
-tapply(filtered_air$Wind, filtered_air$Month, mean)
+## Example 2: ordered treatment, subset, by, and non-default link
+if (requireNamespace("MASS", quietly = TRUE)) {
+  library(MASS)
 
-# We can also investigate the imbalance using the raincloud function
-raincloud(filtered_air,
-  y = Wind,
-  group = Month,
-  significance = "t_test"
-)
+  # Prepare a clean subset of `airquality`
+  aq <- subset(
+    airquality,
+    !is.na(Month) & !is.na(Wind) & !is.na(Temp)
+  )
+
+  # Grouping variable used in the `by` argument
+  aq$Temp_group <- ifelse(
+    aq$Temp > stats::median(aq$Temp, na.rm = TRUE),
+    "high",
+    "low"
+  )
+
+  # Explicit order for the (ordinal) treatment variable
+  ord_month <- sort(unique(aq$Month))
+
+  gps_ord <- estimate_gps(
+    Month ~ Wind + Temp,
+    data = aq,
+    method = "polr",
+    link = "probit",
+    subset = NULL,
+    by = "Temp_group",
+    ordinal_treat = ord_month,
+    reference = "5"
+  )
+}
+
 }
 \seealso{
 \code{\link[=csregion]{csregion()}} for the calculation of common support region,

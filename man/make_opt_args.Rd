@@ -112,26 +112,22 @@ The \code{gps_method} argument must contain one or more of the following codes:
 The object includes a custom S3 \code{print()} method that displays:
 \itemize{
 \item A summary table of all allowed values for each optimization parameter,
-\item The total number of unique parameter combinations (i.e., the size of the search space).
+\item The total number of unique parameter combinations (i.e., the size of the
+search space).
 }
 }
 \examples{
-# Define formula and dataset
-formula_cancer <- formula(status ~ age * sex)
 
 # Create search space with multiple values for GPS and matching
-opt_args <- make_opt_args(
+make_opt_args(
   data = cancer,
-  formula = formula_cancer,
+  formula = formula(status ~ age * sex),
   gps_method = c("m1", "m2", "m9"),
   matching_method = c("nnm", "fullopt"),
   caliper = c(0.1, 0.2),
   order = c("desc", "random"),
   reference = "control"
 )
-
-# Print summary of the search space
-print(opt_args)
 
 }
 \seealso{

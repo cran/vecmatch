@@ -2,7 +2,7 @@
 % Please edit documentation in R/mosaic.R
 \name{mosaic}
 \alias{mosaic}
-\title{Plot the distribution of categorical covariates}
+\title{Plot the Distribution of Categorical Covariates}
 \usage{
 mosaic(
   data = NULL,
@@ -38,11 +38,10 @@ variable in \code{data} to facet by. This argument is used in a call to
 \code{\link[ggplot2:facet_wrap]{ggplot2::facet_wrap()}}, creating separate distribution plots for each
 unique group in the \code{facet} variable.}
 
-\item{ncol}{A single integer. The value should be less than or equal to the
-number of unique categories in the \code{facet} variable. This argument is used
-only when \code{facet} is not NULL, specifying the number of columns in the
-\code{\link[ggplot2:facet_wrap]{ggplot2::facet_wrap()}} call. The distribution plots will be arranged into
-the number of columns defined by \code{ncol}.}
+\item{ncol}{A single integer giving the number of columns in the facet
+layout. When \code{facet} is not \code{NULL}, \code{ncol} must be between 1 and the
+number of unique categories in the \code{facet} variable; values outside this
+range result in an error. This argument is ignored when \code{facet} is \code{NULL}.}
 
 \item{group_counts}{A logical flag. If \code{TRUE}, the sizes of the groups will
 be displayed inside the rectangles in the plot created by the \code{mosaic()}
@@ -110,13 +109,14 @@ titanic_long$Freq <- NULL
 
 # Plot the data using mosaic() and modify the result using additional ggplot2
 # functions
-p <- vecmatch::mosaic(
+p <- mosaic(
   data = titanic_long,
   y = Survived,
   group = Sex,
   facet = Class,
   ncol = 2,
-  significance = TRUE
+  significance = TRUE,
+  plot_name = NULL
 )
 
 p <- p +

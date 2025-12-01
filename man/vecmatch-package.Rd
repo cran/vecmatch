@@ -2,13 +2,25 @@
 % Please edit documentation in R/vecmatch-package.R
 \docType{package}
 \name{vecmatch-package}
+\alias{vecmatch}
 \alias{vecmatch-package}
-\title{vecmatch: Generalized Propensity Score Estimation and Matching for Multiple Groups}
+\title{vecmatch: Vector Matching for Generalized Propensity Scores}
 \description{
-\if{html}{\figure{logo.png}{options: style='float: right' alt='logo' width='120'}}
-
-Implements the Vector Matching algorithm to match multiple treatment groups based on previously estimated generalized propensity scores. The package includes tools for visualizing initial confounder imbalances, estimating treatment assignment probabilities using various methods, defining the common support region, performing matching across multiple groups, and evaluating matching quality. For more details, see Lopez and Gutman (2017) \doi{10.1214/17-STS612}.
+The \code{vecmatch} package implements vector matching methods based
+on generalized propensity scores (GPS) for balancing multiple treatment
+groups, along with diagnostic tools and visualization functions.
 }
+\section{Life cycle}{
+
+\code{vecmatch} is currently in a \emph{stable} stage. The core matching and
+diagnostic functionality is implemented and covered by tests, and the
+package is actively maintained. Minor API changes may still occur in
+response to user feedback and further methodological development, but
+major breaking changes are not anticipated. Future work will focus on
+extending the set of matching algorithms, adding further diagnostics,
+and improving performance and documentation.
+}
+
 \seealso{
 Useful links:
 \itemize{

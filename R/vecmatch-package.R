@@ -1,19 +1,29 @@
+#' @title vecmatch: Vector Matching for Generalized Propensity Scores
+#'
+#' @description The `vecmatch` package implements vector matching methods based
+#' on generalized propensity scores (GPS) for balancing multiple treatment
+#' groups, along with diagnostic tools and visualization functions.
+#'
+#' @section Life cycle:
+#' `vecmatch` is currently in a *stable* stage. The core matching and
+#' diagnostic functionality is implemented and covered by tests, and the
+#' package is actively maintained. Minor API changes may still occur in
+#' response to user feedback and further methodological development, but
+#' major breaking changes are not anticipated. Future work will focus on
+#' extending the set of matching algorithms, adding further diagnostics,
+#' and improving performance and documentation.
+#'
+#'
 #' @keywords internal
 "_PACKAGE"
-#' @title vecmatch
-#' @name vecmatch
-## usethis namespace: start
-## usethis namespace: end
-NULL
 
-
-#' Patients with Colorectal Cancer and Adenoma metadata
+#' @title Patients with Colorectal Cancer and Adenoma
 #'
-#' This is a synthetically generated dataset containing metadata for healthy
-#' individuals and patients diagnosed with colorectal cancer or adenomas. The
-#' primary purpose of this dataset in the context of matching is to balance the
-#' `status` groups across various covariates and achieve optimal matching
-#' quality.
+#' @description This is a synthetically generated dataset containing metadata
+#'   for healthy individuals and patients diagnosed with colorectal cancer or
+#'   adenomas. The primary purpose of this dataset in the context of matching is
+#'   to balance the `status` groups across various covariates and achieve
+#'   optimal matching quality.
 #'
 #' @format A data frame (`cancer`) with 1,224 rows and 5 columns:
 #' \describe{

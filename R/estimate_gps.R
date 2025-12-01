@@ -1,4 +1,4 @@
-#' @title Calculate treatment allocation probabilities
+#' @title Calculate Treatment Allocation Probabilities
 #'
 #' @description `estimate_gps()` computes generalized propensity scores for
 #'   treatment groups by applying a user-defined formula and method. It returns
@@ -40,11 +40,11 @@
 #'   examples refer to the Details section and documentations of corresponding
 #'   functions.
 #'
-#' @return A numeric matrix of class `gps` with the number of columns equal to
+#' @return A data frame of class `gps` with the number of columns equal to
 #'   the number of unique treatment variable levels plus one (for the treatment
-#'   variable itself) and the number of row equal to the number of subjects in
+#'   variable itself) and the number of rows equal to the number of subjects in
 #'   the initial dataset. The original dataset used for estimation can be
-#'   accessed as `original_data` attribute.
+#'   accessed as the `original_data` attribute.
 #'
 #' @details The main goal of the `estimate_gps()` function is to calculate the
 #'   generalized propensity scores aka. treatment allocation probabilities. It
@@ -71,45 +71,76 @@
 #'   [match_gps()] for the matching of generalized propensity scores
 #' @examples
 #'
-#' library("brglm2")
+#' ## Example 1: multinomial bias-reduced model (brglm2) on `airquality`
+#' if (requireNamespace("brglm2", quietly = TRUE)) {
+#'   library(brglm2)
 #'
-#' # Conducting covariate balancing on the `airquality` dataset. Our goal was to
-#' # compare ozone levels by month, but we discovered that ozone levels are
-#' # strongly correlated with wind intensity (measured in mph), and the average
-#' # wind intensity varies across months. Therefore, we need to balance the
-#' # months by wind values to ensure a valid comparison of ozone levels.
+#'   # Initial imbalance of means
+#'   tapply(airquality$Wind, airquality$Month, mean, na.rm = TRUE)
 #'
-#' # Initial imbalance of means
-#' tapply(airquality$Wind, airquality$Month, mean)
+#'   # Formula definition
+#'   formula_air <- Month ~ Wind
 #'
-#' # Formula definition
-#' formula_air <- formula(Month ~ Wind)
+#'   # Estimating the generalized propensity scores using brglm2
+#'   gp_scores <- estimate_gps(
+#'     formula_air,
+#'     data = airquality,
+#'     method = "brglm2",
+#'     reference = "5",
+#'     verbose_output = TRUE,
+#'     control = brglm2::brglmControl(type = "MPL_Jeffreys")
+#'   )
 #'
-#' # Estimating the generalized propensity scores using brglm2 method using
-#' # maximum penalized likelihood estimators with powers of the Jeffreys
-#' gp_scores <- estimate_gps(formula_air,
-#'   data = airquality, method = "brglm2",
-#'   reference = "5", verbose_output = TRUE,
-#'   control = brglmControl(type = "MPL_Jeffreys")
-#' )
+#'   # Filtering the observations outside the csr region
+#'   gps_csr <- csregion(gp_scores)
+#'   filter_which <- attr(gps_csr, "filter_vector")
+#'   filtered_air <- airquality[filter_which, ]
 #'
-#' # Filtering the observations outside the csr region
-#' gps_csr <- csregion(gp_scores)
+#'   # Imbalance after csr
+#'   tapply(filtered_air$Wind, filtered_air$Month, mean, na.rm = TRUE)
 #'
-#' # Calculating imbalance after csr
-#' filter_which <- attr(gps_csr, "filter_vector")
-#' filtered_air <- airquality[filter_which, ]
+#'   # Visual inspection using raincloud
+#'   raincloud(
+#'     filtered_air,
+#'     y = Wind,
+#'     group = Month,
+#'     significance = "t_test"
+#'   )
+#' }
 #'
-#' tapply(filtered_air$Wind, filtered_air$Month, mean)
+#' ## Example 2: ordered treatment, subset, by, and non-default link
+#' if (requireNamespace("MASS", quietly = TRUE)) {
+#'   library(MASS)
 #'
-#' # We can also investigate the imbalance using the raincloud function
-#' raincloud(filtered_air,
-#'   y = Wind,
-#'   group = Month,
-#'   significance = "t_test"
-#' )
+#'   # Prepare a clean subset of `airquality`
+#'   aq <- subset(
+#'     airquality,
+#'     !is.na(Month) & !is.na(Wind) & !is.na(Temp)
+#'   )
+#'
+#'   # Grouping variable used in the `by` argument
+#'   aq$Temp_group <- ifelse(
+#'     aq$Temp > stats::median(aq$Temp, na.rm = TRUE),
+#'     "high",
+#'     "low"
+#'   )
+#'
+#'   # Explicit order for the (ordinal) treatment variable
+#'   ord_month <- sort(unique(aq$Month))
+#'
+#'   gps_ord <- estimate_gps(
+#'     Month ~ Wind + Temp,
+#'     data = aq,
+#'     method = "polr",
+#'     link = "probit",
+#'     subset = NULL,
+#'     by = "Temp_group",
+#'     ordinal_treat = ord_month,
+#'     reference = "5"
+#'   )
+#' }
+#'
 #' @export
-
 estimate_gps <- function(formula,
                          data = NULL,
                          method = "multinom",
@@ -121,10 +152,13 @@ estimate_gps <- function(formula,
                          fit_object = FALSE,
                          verbose_output = FALSE,
                          ...) {
-  ####################### INPUT CHECKING #######################################
-  ########################### AND ##############################################
+  ####################### INPUT CHECKING  ######################################
+  #######################       AND       ######################################
   ####################### DATA PROCESSING ######################################
   call <- match.call()
+  orig_formula <- formula # store the original as well (eg. when formula is an
+  #                         object)
+  call[["formula"]] <- orig_formula
   args <- list(...)
 
   dots <- substitute(list(...))[-1]
@@ -373,15 +407,286 @@ estimate_gps <- function(formula,
   # reset rownames
   rownames(results) <- NULL
 
-  # Assign attributes and class
-  class(results) <- c("data.frame", "gps")
-
-  ## adding original data as attribute
-  attr(results, "original_data") <- args[[".data"]]
-
-  ## Adding call as attribute (for refit in csregion)
-  attr(results, "function_call") <- call
+  # assign attributes and class in one go + most specific class first
+  results <- structure(
+    results,
+    original_data  = args[[".data"]], # data actually used for fitting
+    function_call  = call,
+    class          = c("gps", "data.frame")
+  )
 
   ## returning gps matrix
   return(results)
+}
+
+# internal helper: plot data.frame with a header
+.print_gps_core <- function(x, ...) {
+  # x: gps/csr object (data.frame with first column 'treatment')
+
+  n <- nrow(x)
+  gps_cols <- setdiff(names(x), "treatment")
+  k <- length(gps_cols)
+
+  treatment <- x[["treatment"]]
+  if (is.factor(treatment)) {
+    trt_levels <- levels(treatment)
+  } else {
+    trt_levels <- sort(unique(treatment))
+  }
+
+  cli::cli_ul()
+  cli::cli_li("Number of units: {n}")
+  cli::cli_li("Number of treatments: {k}")
+  cli::cli_li("Treatment column: {.field treatment}")
+  cli::cli_li("GPS probability columns: {.field {paste(gps_cols,
+              collapse = ', ')}}")
+  cli::cli_li("Treatment levels: {paste(trt_levels, collapse = ', ')}")
+  cli::cli_li("All columns except 'treatment' store probabilities in [0, 1].")
+  cli::cli_end()
+
+  cli::cli_text("")
+
+  # print underlying data.frame directly
+  base::print.data.frame(x, ...)
+
+  invisible(x)
+}
+
+#' @export
+print.gps <- function(x, ...) {
+  cli::cli_text("{.strong gps object} (generalized propensity scores)")
+  .print_gps_core(x, ...)
+}
+
+#' @export
+str.gps <- function(object, ...) {
+  n <- nrow(object)
+  p <- ncol(object)
+
+  treatment <- object[["treatment"]]
+  if (is.factor(treatment)) {
+    trt_levels <- levels(treatment)
+  } else {
+    trt_levels <- sort(unique(treatment))
+  }
+
+  gps_cols <- setdiff(names(object), "treatment")
+  k <- length(trt_levels)
+
+  original_data <- attr(object, "original_data")
+  call <- attr(object, "function_call")
+
+  ## Header -------------------------------------------------------------
+  cat("gps object: generalized propensity scores\n")
+  cat(sprintf(" Dimensions: %d rows x %d columns\n", n, p))
+  cat(sprintf(" Treatment column: %s\n", "treatment"))
+  cat(sprintf(
+    " GPS columns: %s\n",
+    if (length(gps_cols)) paste(gps_cols, collapse = ", ") else "<none>"
+  ))
+  cat(sprintf(" Number of treatment levels: %d\n", k))
+  cat(sprintf(
+    " Treatment levels: %s\n",
+    if (length(trt_levels)) paste(trt_levels, collapse = ", ") else "<none>"
+  ))
+
+  if (!is.null(original_data)) {
+    cat(sprintf(
+      " original_data: data.frame with %d rows and %d columns\n",
+      NROW(original_data), NCOL(original_data)
+    ))
+  } else {
+    cat(" original_data: <none>\n")
+  }
+
+  if (!is.null(call)) {
+    cat(" Call:\n")
+    cat("  ",
+      paste(deparse(call, width.cutoff = 80L), collapse = "\n  "),
+      "\n",
+      sep = ""
+    )
+  }
+
+  cat("\nUnderlying data.frame structure:\n")
+
+  ## Delegate to data.frame method for the actual structure -------------
+  utils::str(unclass(object), ...)
+
+  invisible(object)
+}
+
+#' @export
+summary.gps <- function(object, ...) {
+  # ensure treatment is a factor
+  treatment <- object[["treatment"]]
+  if (!is.factor(treatment)) {
+    treatment <- factor(treatment)
+  }
+
+  gps_cols <- setdiff(names(object), "treatment")
+
+  # summary of GPS matrix by treatment level
+  gps_by_trt <- lapply(
+    split(object[, gps_cols, drop = FALSE], treatment),
+    function(df) {
+      stats_list <- lapply(df, function(v) {
+        if (is.numeric(v)) {
+          summary(v, ...)
+        } else {
+          summary(as.numeric(v), ...)
+        }
+      })
+      stats_mat <- do.call(cbind, stats_list)
+      as.matrix(stats_mat)
+    }
+  )
+
+  # keep original_data as is, no summary here
+  od <- attr(object, "original_data")
+
+  res <- list(
+    call             = attr(object, "function_call"),
+    n                = nrow(object),
+    treatments       = levels(treatment),
+    gps_by_treatment = gps_by_trt,
+    original_data    = od
+  )
+  class(res) <- "summary.gps"
+  res
+}
+
+#' @export
+print.summary.gps <- function(x, ...) {
+  cli::cli_h1("Summary of gps object")
+
+  # call + basic info
+  if (!is.null(x$call)) {
+    cli::cli_h2("Call")
+    txt <- deparse(x$call, width.cutoff = 80L)
+    for (line in txt) {
+      cli::cli_text("{.code {line}}")
+    }
+    cli::cli_text("")
+  }
+
+  cli::cli_h2("Overview")
+  cli::cli_ul()
+  cli::cli_li("Number of units: {x$n}")
+  cli::cli_li("Number of treatments: {length(x$treatments)}")
+  cli::cli_li("Treatment levels: {paste(x$treatments, collapse = ', ')}")
+  cli::cli_end()
+  cli::cli_text("")
+
+  ## 1) GPS matrix by treatment -----------------------------------------------
+  cli::cli_h2("GPS matrix by treatment")
+
+  gps_by_trt <- x$gps_by_treatment
+
+  if (length(gps_by_trt) == 0L) {
+    cli::cli_text("{.emph No GPS probability columns found.}")
+  } else {
+    for (trt in names(gps_by_trt)) {
+      cli::cli_h3("Treatment: {trt}")
+      stats_mat <- gps_by_trt[[trt]]
+
+      # Row names = statistic (Min., 1st Qu., Median, Mean, 3rd Qu., Max.)
+      df <- as.data.frame(stats_mat)
+      df <- cbind(Statistic = rownames(stats_mat), df)
+      rownames(df) <- NULL
+
+      # round numeric columns
+      num_cols <- vapply(df, is.numeric, logical(1L))
+      df[num_cols] <- lapply(df[num_cols], function(v) round(v, 3))
+
+      txt <- utils::capture.output(print(df, row.names = FALSE))
+      cli::cli_verbatim(paste(txt, collapse = "\n"))
+      cli::cli_text("")
+    }
+  }
+
+  ## 2) original data summary --------------------------------------------------
+  cli::cli_h2("Original data summary (attribute 'original_data')")
+
+  od <- x$original_data
+  # just paste the output of original summary()
+  if (is.null(od)) {
+    cli::cli_text("{.emph No original_data attribute or summary available.}")
+  } else {
+    txt <- utils::capture.output(summary(od))
+    cli::cli_verbatim(paste(txt, collapse = "\n"))
+  }
+
+  invisible(x)
+}
+
+#' @export
+as.data.frame.gps <- function(x, ...) {
+  class(x) <- "data.frame"
+  NextMethod()
+}
+
+#' @export
+plot.gps <- function(x,
+                     gps_cols = NULL,
+                     treatment_col = "treatment",
+                     ...) {
+  # x: gps object (data.frame with GPS columns + treatment)
+  # gps_cols: optional character vector of GPS columns to plot
+  # treatment_col: name of treatment column in x
+  # ...: additional arguments passed to boxplot()
+
+  # --- basic checks ---
+  trt <- x[[treatment_col]]
+  if (!is.factor(trt)) {
+    trt <- factor(trt)
+  }
+
+  all_gps_cols <- setdiff(names(x), treatment_col)
+
+  if (is.null(gps_cols)) {
+    gps_cols <- all_gps_cols
+  } else {
+    gps_cols <- intersect(gps_cols, all_gps_cols)
+    if (!length(gps_cols)) {
+      stop(
+        "None of the requested `gps_cols` are valid. ",
+        "Available: ", paste(all_gps_cols, collapse = ", ")
+      )
+    }
+  }
+
+  # --- layout: number of panels based on number of treatment levels ---
+  levs <- levels(trt)
+  n_trt <- length(levs)
+
+  old_par <- graphics::par(no.readonly = TRUE)
+  on.exit(graphics::par(old_par))
+
+  if (n_trt == 1L) {
+    graphics::par(mfrow = c(1, 1))
+  } else if (n_trt == 2L) {
+    graphics::par(mfrow = c(1, 2))
+  } else if (n_trt <= 4L) {
+    graphics::par(mfrow = c(2, 2))
+  } else {
+    nrow <- ceiling(n_trt / 2)
+    graphics::par(mfrow = c(nrow, 2))
+  }
+
+  # --- draw boxplots for each treatment level ---
+  for (lev in levs) {
+    idx <- trt == lev
+    dat <- x[idx, gps_cols, drop = FALSE]
+
+    graphics::boxplot(
+      dat,
+      main = paste("GPS by column | treatment:", lev),
+      ylab = "GPS probability",
+      xlab = "GPS columns",
+      ...
+    )
+  }
+
+  invisible(x)
 }

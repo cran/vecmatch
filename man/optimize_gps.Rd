@@ -9,7 +9,6 @@ optimize_gps(
   formula,
   ordinal_treat = NULL,
   n_iter = 1000,
-  n_cores = 1,
   opt_args = NULL
 )
 }
@@ -41,14 +40,6 @@ spaces, increasing \code{n_iter} is recommended. When using parallel processing
 \code{n_iter}. Too many cores with too few iterations may introduce
 overhead and reduce efficiency.}
 
-\item{n_cores}{Integer. Number of CPU cores to use for parallel execution. If
-set to a value greater than 1, a parallel backend is registered using
-\code{\link[future:multisession]{future::multisession()}}. \strong{Note:} parallel execution can significantly
-increase memory usage. With large datasets or high \code{n_iter} values, RAM
-consumption may spike, especially on systems with 16-32 GB RAM. Users are
-advised to monitor system resources. Internally, the function performs
-memory cleanup post-execution to manage resource usage efficiently.}
-
 \item{opt_args}{An object of class \code{"opt_args"} containing optimization
 parameters and argument settings. Use \code{\link[=make_opt_args]{make_opt_args()}} to create this
 object. It specifies the search space for the GPS estimation and matching
@@ -62,12 +53,25 @@ optimization procedure. You can access it using \code{attr(result, "opt_results"
 
 The object contains the following custom attributes:
 \itemize{
-\item \strong{\code{opt_results}}: A \code{data.frame} of optimization results. Each row corresponds to a unique parameter combination tested. For a complete description of columns, see the \emph{\strong{Details}} section.
-\item \strong{\code{optimization_time}}: Time (in seconds) taken by the optimization loop (i.e., the core \code{for}-loop that evaluates combinations). This does \strong{not} include the time needed for GPS estimation, pre-processing, or merging of results after loop completion. On large datasets, these excluded steps can still be substantial.
-\item \strong{\code{combinations_tested}}: Total number of unique parameter combinations evaluated during optimization.
-\item \strong{\code{smd_results}}: A detailed table of standardized mean differences (SMDs) for all pairwise treatment group comparisons and for all covariates specified in the \code{formula}. This is used by the \code{\link[=select_opt]{select_opt()}} function to filter optimal models based on covariate-level balance across groups.
-\item \strong{\code{treat_names}}: A character vector with the names of the unique treatment groups.
-\item \strong{\code{model_covs}}: A character vector listing the model covariates (main effects and interactions) used in the \code{formula}. These names correspond to the variables shown in the \code{smd_results} table.
+\item \strong{\code{opt_results}}: A \code{data.frame} of optimization results. Each row
+corresponds to a unique parameter combination tested. For a complete
+description of columns, see the \emph{\strong{Details}} section.
+\item \strong{\code{optimization_time}}: Time (in seconds) taken by the optimization loop
+(i.e., the core \code{for}-loop that evaluates combinations). This does \strong{not}
+include the time needed for GPS estimation, pre-processing, or merging of
+results after loop completion. On large datasets, these excluded steps can
+still be substantial.
+\item \strong{\code{combinations_tested}}: Total number of unique parameter combinations
+evaluated during optimization.
+\item \strong{\code{smd_results}}: A detailed table of standardized mean differences (SMDs)
+for all pairwise treatment group comparisons and for all covariates
+specified in the \code{formula}. This is used by the \code{\link[=select_opt]{select_opt()}} function to
+filter optimal models based on covariate-level balance across groups.
+\item \strong{\code{treat_names}}: A character vector with the names of the unique
+treatment groups.
+\item \strong{\code{model_covs}}: A character vector listing the model covariates (main
+effects and interactions) used in the \code{formula}. These names correspond to
+the variables shown in the \code{smd_results} table.
 }
 }
 \description{
@@ -109,7 +113,8 @@ The returned \code{data.frame} includes the following columns (depending on the
 number of treatment levels):
 \itemize{
 \item \code{iter_ID}: Unique identifier for each parameter combination
-\item \code{method_match}: Matching method used in \code{\link[=match_gps]{match_gps()}}, e.g., \code{"nnm"} or \code{"fullopt"}
+\item \code{method_match}: Matching method used in \code{\link[=match_gps]{match_gps()}}, e.g., \code{"nnm"} or
+\code{"fullopt"}
 \item \code{caliper}: Caliper value used in \code{\link[=match_gps]{match_gps()}}
 \item \code{order}: Ordering of GPS scores prior to matching
 \item \code{kmeans_cluster}: Number of k-means clusters used
@@ -117,16 +122,18 @@ number of treatment levels):
 \item \code{ties}: Tie-breaking rule in nearest-neighbor matching (\code{nnm} only)
 \item \code{ratio}: Control-to-treated ratio for \code{nnm}
 \item \code{min_controls}, \code{max_controls}: Minimum and maximum controls for \code{fullopt}
-\item \code{reference}: Reference group used in both \code{\link[=estimate_gps]{estimate_gps()}} and \code{\link[=match_gps]{match_gps()}}
+\item \code{reference}: Reference group used in both \code{\link[=estimate_gps]{estimate_gps()}} and
+\code{\link[=match_gps]{match_gps()}}
 \item \code{perc_matched}: Percentage of matched samples (from \code{\link[=balqual]{balqual()}})
 \item \code{smd}: Maximum standardized mean difference (from \code{\link[=balqual]{balqual()}})
-\item \verb{p_\{group_name\}}: Percent matched per treatment group (based on group sample size)
+\item \verb{p_\{group_name\}}: Percent matched per treatment group (based on group s
+ample size)
 \item \code{method_gps}: GPS estimation method used (from \code{\link[=estimate_gps]{estimate_gps()}})
 \item \code{link}: Link function used in GPS model
 \item \code{smd_group}: SMD range category for the row
 }
 
-The resulting \code{best_opt_result} object also includes a custom \code{print()}
+The resulting \code{best_opt_result} object also includes a custom \code{summary()}
 method that summarizes:
 \itemize{
 \item The number of optimal parameter sets per SMD group
@@ -143,7 +150,7 @@ formula_cancer <- formula(status ~ age * sex)
 opt_args <- make_opt_args(cancer, formula_cancer, gps_method = "m1")
 
 # Run optimization with 2000 random parameter sets and a fixed seed
-\dontrun{
+\donttest{
 withr::with_seed(
   8252,
   {

@@ -38,8 +38,11 @@ groups is used for selection within each SMD category.}
 An S3 object of class \code{select_result}, containing the filtered and
 prioritized optimization results. The object includes:
 \itemize{
-\item A \code{data.frame} with selected parameter combinations and performance metrics.
-\item \strong{Attribute \code{param_df}}: A \code{data.frame} with full parameter specifications (\code{iter_ID}, GPS/matching parameters, etc.), useful for manually refitting or reproducing results.
+\item A \code{data.frame} with selected parameter combinations and performance
+metrics.
+\item \strong{Attribute \code{param_df}}: A \code{data.frame} with full parameter specifications
+(\code{iter_ID}, GPS/matching parameters, etc.), useful for manually refitting or
+reproducing results.
 }
 
 The object also includes a custom \code{print()} method that summarizes:
@@ -55,8 +58,11 @@ results from \code{optimize_gps()} based on the specific goals of a study.
 Depending on the research design, certain pairwise comparisons or treatment
 groups may be more important than others. For example:
 \itemize{
-\item You may want to prioritize matching between a specific groups (e.g. specific disease vs. controls), while ignoring other group comparisons during SMD evaluation.
-\item You may wish to retain as many samples as possible from a critical group or set of groups, regardless of matching rates in other groups.
+\item You may want to prioritize matching between a specific groups (e.g.
+specific disease vs. controls), while ignoring other group comparisons
+during SMD evaluation.
+\item You may wish to retain as many samples as possible from a critical group or
+set of groups, regardless of matching rates in other groups.
 }
 
 This function enables targeted selection of optimal parameter combinations
@@ -97,10 +103,10 @@ one(s) are selected based on the percentage of matched samples - either
 overall or in the specified treatment groups (\code{perc_matched}).
 }
 \examples{
+\donttest{
 # Define formula and set up optimization
 formula_cancer <- formula(status ~ age * sex)
 opt_args <- make_opt_args(cancer, formula_cancer, gps_method = "m1")
-\dontrun{
 withr::with_seed(8252, {
   opt_results <- optimize_gps(
     data = cancer,
@@ -109,16 +115,14 @@ withr::with_seed(8252, {
     n_iter = 2000
   )
 })
-}
 # Select optimal combinations prioritizing SMD balance and matching in key
 # groups
-\dontrun{
-select_results <- select_opt(
+select_opt(
   x = opt_results,
   smd_groups = list(
-    c("adenoma", "controls"),
-    c("controls", "crc_beningn"),
-    c("crc_malignant", "controls")
+    c("adenoma", "control"),
+    c("control", "crc_benign"),
+    c("crc_malignant", "control")
   ),
   smd_variables = "age",
   smd_type = "max",
