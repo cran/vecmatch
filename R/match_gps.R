@@ -102,7 +102,12 @@
 #'   [optmatch::fullmatch()]. Like `"fullopt"`, this method calculates a
 #'   discrepancy matrix and finds matches that minimize its sum. The available
 #'   tuning parameters are `caliper` and `ratio`.
-
+#'
+#'   Each method only accepts the tuning parameters listed above. Arguments
+#'   that do not apply to the selected `method` are dropped, and a warning
+#'   naming them is emitted only when they were explicitly supplied. Tuning
+#'   parameters that are left at their default are filled in silently, so a
+#'   call relying on the defaults runs without any warnings.
 #'
 #' @return A `data.frame` similar to the one provided as the `data` argument in
 #'   the [estimate_gps()] function, containing the same columns but only the
@@ -373,7 +378,7 @@ match_gps <- function(csmatrix = NULL,
   ## varargs processing section ================================================
   # ratio
   if ("ratio" %in% allowed_varargs) {
-    ratio <- .chk_null_default(ratio, "ratio", method, 1)
+    ratio <- ratio %||% 1
 
     .chk_vararg_length(ratio, "ratio",
       type_n = "integer",
@@ -386,7 +391,7 @@ match_gps <- function(csmatrix = NULL,
 
   # replace
   if ("replace" %in% allowed_varargs) {
-    replace <- .chk_null_default(replace, "replace", method, FALSE)
+    replace <- replace %||% FALSE
 
     .chk_vararg_length(replace, "replace",
       type_n = "logical flag",
@@ -403,7 +408,7 @@ match_gps <- function(csmatrix = NULL,
 
   # process caliper
   if ("caliper" %in% allowed_varargs) {
-    caliper <- .chk_null_default(caliper, "caliper", method, 0.25)
+    caliper <- caliper %||% 0.25
 
     .chk_vararg_length(caliper, "caliper",
       TRUE,
@@ -435,7 +440,7 @@ match_gps <- function(csmatrix = NULL,
 
   # processing the ties argument
   if ("ties" %in% allowed_varargs) {
-    ties <- .chk_null_default(ties, "ties", method, TRUE)
+    ties <- ties %||% TRUE
 
     .chk_vararg_length(ties, "ties",
       type_n = "logical flag",
@@ -452,7 +457,7 @@ match_gps <- function(csmatrix = NULL,
 
   # processing the order argument
   if ("order" %in% allowed_varargs) {
-    order <- .chk_null_default(order, "order", method, "desc")
+    order <- order %||% "desc"
 
     .chk_vararg_length(order, "order",
       type_n = "text string",
@@ -474,7 +479,7 @@ match_gps <- function(csmatrix = NULL,
 
   # processing the min_controls
   if ("min_controls" %in% allowed_varargs) {
-    min_controls <- .chk_null_default(min_controls, "min_controls", method, 0)
+    min_controls <- min_controls %||% 0
 
     .chk_vararg_length(min_controls, "min_controls",
       TRUE,
@@ -492,7 +497,7 @@ match_gps <- function(csmatrix = NULL,
 
   # processing the max_controls
   if ("max_controls" %in% allowed_varargs) {
-    max_controls <- .chk_null_default(max_controls, "max_controls", method, Inf)
+    max_controls <- max_controls %||% Inf
 
     .chk_vararg_length(max_controls, "max_controls",
       TRUE,
@@ -505,7 +510,7 @@ match_gps <- function(csmatrix = NULL,
       "The `max_controls` argument has to be a non-negative number."
     )
 
-    args[["max_controls"]] <- .vectorize(caliper, matches_n)
+    args[["max.controls"]] <- .vectorize(max_controls, matches_n)
   }
 
   # process kmeans_cluster
@@ -633,22 +638,25 @@ match_gps <- function(csmatrix = NULL,
     # arg processing for Matching::Matchby
 
     if (method == "nnm" || method == "nnm_2t") {
-      # filtering the data frame for matching
-      args_loop[[data_name]] <- args_loop[[data_name]][, -1, drop = FALSE]
+      # filtering the data frame for matching; only the gps column of the
+      # first group of the current combination is used as the covariate
       args_loop[[data_name]] <- args_loop[[data_name]][
         obs_filter,
-        cols_matching
+        combos[i, 1],
+        drop = FALSE
       ]
 
       # defining data order
-      order_data <- .ordering_func(args_loop[[data_name]][, reference],
+      order_data <- .ordering_func(args_loop[[data_name]][, combos[i, 1]],
         order = sort_before_matching[i]
       )
       order_original <- seq_len(nrow(args_loop[[data_name]]))
       order_original <- order_original[order_data]
 
       # reordering the data
-      args_loop[[data_name]] <- args_loop[[data_name]][order_data, ]
+      args_loop[[data_name]] <- args_loop[[data_name]][order_data, ,
+        drop = FALSE
+      ]
 
       # adding the clusters to matching arguments
       if (n_treat > 2) {
@@ -686,7 +694,7 @@ match_gps <- function(csmatrix = NULL,
       args_loop[[data_name]] <- as.data.frame(args_loop[[data_name]])
 
       # defining the order
-      order_data <- .ordering_func(args_loop[[data_name]][, reference],
+      order_data <- .ordering_func(args_loop[[data_name]][, combos[i, 1]],
         order = order
       )
       order_original <- seq_len(nrow(args_loop[[data_name]]))

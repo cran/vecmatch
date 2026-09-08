@@ -51,7 +51,6 @@ matched_cancer <- match_gps(csr_matrix,
   caliper = 0.21,
   kmeans_cluster = 2,
   reference = "control",
-  replace = TRUE,
   method = "fullopt",
   order = "desc"
 )
@@ -60,6 +59,22 @@ matched_cancer <- match_gps(csr_matrix,
 balqual(matched_cancer,
   formula_cancer,
   type = "smd",
+  statistic = "max",
+  round = 4
+)
+
+## -----------------------------------------------------------------------------
+balqual(matched_cancer,
+  formula_cancer,
+  type = c("smd", "desc_full"),
+  statistic = "max",
+  round = 4
+)
+
+## -----------------------------------------------------------------------------
+balqual(matched_cancer,
+  formula_cancer,
+  type = c("smd", "desc_reduced"),
   statistic = "max",
   round = 4
 )

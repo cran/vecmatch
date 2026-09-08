@@ -443,22 +443,22 @@ seed. For reproducibility, set a seed before calling the optimizer.</p>
 <span id="cb2-30"><a href="#cb2-30" tabindex="-1"></a><span class="co">#&gt; -------------------------------------------------------</span></span>
 <span id="cb2-31"><a href="#cb2-31" tabindex="-1"></a><span class="co">#&gt; | smd_group  | unique_configs |  smd   | perc_matched |</span></span>
 <span id="cb2-32"><a href="#cb2-32" tabindex="-1"></a><span class="co">#&gt; -------------------------------------------------------</span></span>
-<span id="cb2-33"><a href="#cb2-33" tabindex="-1"></a><span class="co">#&gt; |0-0.05      |               2|   0.025|         79.73|</span></span>
-<span id="cb2-34"><a href="#cb2-34" tabindex="-1"></a><span class="co">#&gt; |0.05-0.10   |               1|   0.098|         80.73|</span></span>
-<span id="cb2-35"><a href="#cb2-35" tabindex="-1"></a><span class="co">#&gt; |0.10-0.15   |               7|   0.145|          91.2|</span></span>
-<span id="cb2-36"><a href="#cb2-36" tabindex="-1"></a><span class="co">#&gt; |0.15-0.20   |               3|   0.191|          96.1|</span></span>
-<span id="cb2-37"><a href="#cb2-37" tabindex="-1"></a><span class="co">#&gt; |0.20-0.25   |               1|   0.203|         93.52|</span></span>
-<span id="cb2-38"><a href="#cb2-38" tabindex="-1"></a><span class="co">#&gt; |0.25-0.30   |               2|   0.266|         79.01|</span></span>
-<span id="cb2-39"><a href="#cb2-39" tabindex="-1"></a><span class="co">#&gt; |0.25-0.30   |               2|   0.286|         79.01|</span></span>
-<span id="cb2-40"><a href="#cb2-40" tabindex="-1"></a><span class="co">#&gt; |&gt;0.30       |               1|   0.343|         80.73|</span></span>
+<span id="cb2-33"><a href="#cb2-33" tabindex="-1"></a><span class="co">#&gt; |0-0.05      |               1|   0.036|         78.74|</span></span>
+<span id="cb2-34"><a href="#cb2-34" tabindex="-1"></a><span class="co">#&gt; |0.05-0.10   |               2|    0.09|         83.06|</span></span>
+<span id="cb2-35"><a href="#cb2-35" tabindex="-1"></a><span class="co">#&gt; |0.10-0.15   |               7|   0.148|         92.19|</span></span>
+<span id="cb2-36"><a href="#cb2-36" tabindex="-1"></a><span class="co">#&gt; |0.10-0.15   |               7|   0.145|         92.19|</span></span>
+<span id="cb2-37"><a href="#cb2-37" tabindex="-1"></a><span class="co">#&gt; |0.15-0.20   |               1|   0.199|         96.93|</span></span>
+<span id="cb2-38"><a href="#cb2-38" tabindex="-1"></a><span class="co">#&gt; |0.20-0.25   |               3|   0.203|         97.09|</span></span>
+<span id="cb2-39"><a href="#cb2-39" tabindex="-1"></a><span class="co">#&gt; |0.25-0.30   |               1|   0.251|         93.11|</span></span>
+<span id="cb2-40"><a href="#cb2-40" tabindex="-1"></a><span class="co">#&gt; |&gt;0.30       |               1|   0.351|          81.4|</span></span>
 <span id="cb2-41"><a href="#cb2-41" tabindex="-1"></a><span class="co">#&gt; -------------------------------------------------------</span></span>
 <span id="cb2-42"><a href="#cb2-42" tabindex="-1"></a><span class="co">#&gt; </span></span>
 <span id="cb2-43"><a href="#cb2-43" tabindex="-1"></a><span class="co">#&gt; Optimization Summary</span></span>
 <span id="cb2-44"><a href="#cb2-44" tabindex="-1"></a><span class="co">#&gt; --------------------</span></span>
 <span id="cb2-45"><a href="#cb2-45" tabindex="-1"></a><span class="co">#&gt; Total combinations tested  : 6000</span></span>
-<span id="cb2-46"><a href="#cb2-46" tabindex="-1"></a><span class="co">#&gt; Total optimization time [s]: 123.97</span></span></code></pre></div>
+<span id="cb2-46"><a href="#cb2-46" tabindex="-1"></a><span class="co">#&gt; Total optimization time [s]: 114.68</span></span></code></pre></div>
 <p>We ran the optimization on a single core with
-<code>n_iter = 1500</code>; on our test machine this required 123.97
+<code>n_iter = 1500</code>; on our test machine this required 114.68
 seconds. Given the size of the parameter grid, increasing
 <code>n_iter</code> would improve the search’s coverage, but here we
 limited iterations to keep the vignette’s build time reasonable.</p>
@@ -494,17 +494,17 @@ groups. * Minimize the standardized mean difference (SMD) for the
 <span id="cb3-12"><a href="#cb3-12" tabindex="-1"></a><span class="co">#&gt; ------------------------------------------------------- </span></span>
 <span id="cb3-13"><a href="#cb3-13" tabindex="-1"></a><span class="co">#&gt; | smd_group  | unique_configs |  smd   | perc_matched |</span></span>
 <span id="cb3-14"><a href="#cb3-14" tabindex="-1"></a><span class="co">#&gt; ------------------------------------------------------- </span></span>
-<span id="cb3-15"><a href="#cb3-15" tabindex="-1"></a><span class="co">#&gt; |0-0.05      |               4|   0.047|        83.155|</span></span>
-<span id="cb3-16"><a href="#cb3-16" tabindex="-1"></a><span class="co">#&gt; |0.05-0.10   |               2|   0.094|        90.304|</span></span>
-<span id="cb3-17"><a href="#cb3-17" tabindex="-1"></a><span class="co">#&gt; |0.10-0.15   |               7|   0.145|        94.737|</span></span>
-<span id="cb3-18"><a href="#cb3-18" tabindex="-1"></a><span class="co">#&gt; |0.15-0.20   |               3|   0.191|        97.976|</span></span>
-<span id="cb3-19"><a href="#cb3-19" tabindex="-1"></a><span class="co">#&gt; |0.20-0.25   |               1|   0.203|        95.763|</span></span>
-<span id="cb3-20"><a href="#cb3-20" tabindex="-1"></a><span class="co">#&gt; |0.25-0.30   |               1|   0.266|        80.137|</span></span>
-<span id="cb3-21"><a href="#cb3-21" tabindex="-1"></a><span class="co">#&gt; |0.30-0.35   |               1|   0.343|        81.764|</span></span>
-<span id="cb3-22"><a href="#cb3-22" tabindex="-1"></a><span class="co">#&gt; |0.35-0.40   |               1|   0.371|         71.67|</span></span>
-<span id="cb3-23"><a href="#cb3-23" tabindex="-1"></a><span class="co">#&gt; |0.40-0.45   |               1|   0.445|        76.449|</span></span>
-<span id="cb3-24"><a href="#cb3-24" tabindex="-1"></a><span class="co">#&gt; |0.45-0.50   |               1|   0.465|         77.39|</span></span>
-<span id="cb3-25"><a href="#cb3-25" tabindex="-1"></a><span class="co">#&gt; |&gt;0.50       |               1|   0.541|        80.082|</span></span>
+<span id="cb3-15"><a href="#cb3-15" tabindex="-1"></a><span class="co">#&gt; |0-0.05      |               4|   0.043|        83.155|</span></span>
+<span id="cb3-16"><a href="#cb3-16" tabindex="-1"></a><span class="co">#&gt; |0.05-0.10   |               1|   0.094|        90.438|</span></span>
+<span id="cb3-17"><a href="#cb3-17" tabindex="-1"></a><span class="co">#&gt; |0.10-0.15   |               6|   0.145|        95.547|</span></span>
+<span id="cb3-18"><a href="#cb3-18" tabindex="-1"></a><span class="co">#&gt; |0.15-0.20   |               1|   0.199|        98.247|</span></span>
+<span id="cb3-19"><a href="#cb3-19" tabindex="-1"></a><span class="co">#&gt; |0.20-0.25   |               3|   0.203|        98.381|</span></span>
+<span id="cb3-20"><a href="#cb3-20" tabindex="-1"></a><span class="co">#&gt; |0.25-0.30   |               1|   0.251|        91.336|</span></span>
+<span id="cb3-21"><a href="#cb3-21" tabindex="-1"></a><span class="co">#&gt; |0.30-0.35   |               1|     0.3|        79.409|</span></span>
+<span id="cb3-22"><a href="#cb3-22" tabindex="-1"></a><span class="co">#&gt; |0.35-0.40   |               1|   0.362|        74.698|</span></span>
+<span id="cb3-23"><a href="#cb3-23" tabindex="-1"></a><span class="co">#&gt; |0.40-0.45   |               1|   0.418|         76.38|</span></span>
+<span id="cb3-24"><a href="#cb3-24" tabindex="-1"></a><span class="co">#&gt; |0.45-0.50   |               1|   0.487|        79.467|</span></span>
+<span id="cb3-25"><a href="#cb3-25" tabindex="-1"></a><span class="co">#&gt; |&gt;0.50       |               1|   0.528|        70.324|</span></span>
 <span id="cb3-26"><a href="#cb3-26" tabindex="-1"></a><span class="co">#&gt; -------------------------------------------------------</span></span></code></pre></div>
 <p>The output shows the SMD bins and highlights the combination within
 each bin that best meets our criteria. Suppose the configuration in the
@@ -532,9 +532,9 @@ workflow:</p>
 <span id="cb4-9"><a href="#cb4-9" tabindex="-1"></a><span class="co">#&gt; </span></span>
 <span id="cb4-10"><a href="#cb4-10" tabindex="-1"></a><span class="co">#&gt; Treatment          | N before           | N after            | Retained (%)       </span></span>
 <span id="cb4-11"><a href="#cb4-11" tabindex="-1"></a><span class="co">#&gt; -------------------------------------------------------------------------------- </span></span>
-<span id="cb4-12"><a href="#cb4-12" tabindex="-1"></a><span class="co">#&gt; adenoma            | 374                | 306                | 81.8%              </span></span>
+<span id="cb4-12"><a href="#cb4-12" tabindex="-1"></a><span class="co">#&gt; adenoma            | 374                | 307                | 82.1%              </span></span>
 <span id="cb4-13"><a href="#cb4-13" tabindex="-1"></a><span class="co">#&gt; control            | 315                | 261                | 82.9%              </span></span>
-<span id="cb4-14"><a href="#cb4-14" tabindex="-1"></a><span class="co">#&gt; crc_benign         | 273                | 241                | 88.3%              </span></span>
+<span id="cb4-14"><a href="#cb4-14" tabindex="-1"></a><span class="co">#&gt; crc_benign         | 273                | 242                | 88.6%              </span></span>
 <span id="cb4-15"><a href="#cb4-15" tabindex="-1"></a><span class="co">#&gt; crc_malignant      | 248                | 245                | 98.8%</span></span></code></pre></div>
 <ol start="3" style="list-style-type: decimal">
 <li>You can call <code>balqual</code> on the output object to evaluate
@@ -555,9 +555,9 @@ balance and verify reproducibility at then end:</li>
 <span id="cb5-13"><a href="#cb5-13" tabindex="-1"></a><span class="co">#&gt; -------------------------------------------------- </span></span>
 <span id="cb5-14"><a href="#cb5-14" tabindex="-1"></a><span class="co">#&gt; Treatment                 | Before     | After      </span></span>
 <span id="cb5-15"><a href="#cb5-15" tabindex="-1"></a><span class="co">#&gt; -------------------------------------------------- </span></span>
-<span id="cb5-16"><a href="#cb5-16" tabindex="-1"></a><span class="co">#&gt; adenoma                   | 374        | 306        </span></span>
+<span id="cb5-16"><a href="#cb5-16" tabindex="-1"></a><span class="co">#&gt; adenoma                   | 374        | 307        </span></span>
 <span id="cb5-17"><a href="#cb5-17" tabindex="-1"></a><span class="co">#&gt; control                   | 315        | 261        </span></span>
-<span id="cb5-18"><a href="#cb5-18" tabindex="-1"></a><span class="co">#&gt; crc_benign                | 273        | 241        </span></span>
+<span id="cb5-18"><a href="#cb5-18" tabindex="-1"></a><span class="co">#&gt; crc_benign                | 273        | 242        </span></span>
 <span id="cb5-19"><a href="#cb5-19" tabindex="-1"></a><span class="co">#&gt; crc_malignant             | 248        | 245        </span></span>
 <span id="cb5-20"><a href="#cb5-20" tabindex="-1"></a><span class="co">#&gt; -------------------------------------------------- </span></span>
 <span id="cb5-21"><a href="#cb5-21" tabindex="-1"></a><span class="co">#&gt; </span></span>
@@ -565,9 +565,9 @@ balance and verify reproducibility at then end:</li>
 <span id="cb5-23"><a href="#cb5-23" tabindex="-1"></a><span class="co">#&gt; Matching summary statistics:</span></span>
 <span id="cb5-24"><a href="#cb5-24" tabindex="-1"></a><span class="co">#&gt; ---------------------------------------- </span></span>
 <span id="cb5-25"><a href="#cb5-25" tabindex="-1"></a><span class="co">#&gt; Total n before matching:  1210 </span></span>
-<span id="cb5-26"><a href="#cb5-26" tabindex="-1"></a><span class="co">#&gt; Total n after matching:       1053 </span></span>
-<span id="cb5-27"><a href="#cb5-27" tabindex="-1"></a><span class="co">#&gt; % of matched observations:    87.02 %</span></span>
-<span id="cb5-28"><a href="#cb5-28" tabindex="-1"></a><span class="co">#&gt; Total  maximal   SMD value:   0.13 </span></span>
+<span id="cb5-26"><a href="#cb5-26" tabindex="-1"></a><span class="co">#&gt; Total n after matching:       1055 </span></span>
+<span id="cb5-27"><a href="#cb5-27" tabindex="-1"></a><span class="co">#&gt; % of matched observations:    87.19 %</span></span>
+<span id="cb5-28"><a href="#cb5-28" tabindex="-1"></a><span class="co">#&gt; Total  maximal   SMD value:   0.129 </span></span>
 <span id="cb5-29"><a href="#cb5-29" tabindex="-1"></a><span class="co">#&gt; </span></span>
 <span id="cb5-30"><a href="#cb5-30" tabindex="-1"></a><span class="co">#&gt; </span></span>
 <span id="cb5-31"><a href="#cb5-31" tabindex="-1"></a><span class="co">#&gt; Maximal values :</span></span>
@@ -575,10 +575,10 @@ balance and verify reproducibility at then end:</li>
 <span id="cb5-33"><a href="#cb5-33" tabindex="-1"></a><span class="co">#&gt; Variable                  | Coef  | Before       | After        | Quality      </span></span>
 <span id="cb5-34"><a href="#cb5-34" tabindex="-1"></a><span class="co">#&gt; -------------------------------------------------------------------------------- </span></span>
 <span id="cb5-35"><a href="#cb5-35" tabindex="-1"></a><span class="co">#&gt; age                       | SMD   | 0.240        | 0.094        | Balanced     </span></span>
-<span id="cb5-36"><a href="#cb5-36" tabindex="-1"></a><span class="co">#&gt; sexF                      | SMD   | 0.138        | 0.116        | Balanced     </span></span>
-<span id="cb5-37"><a href="#cb5-37" tabindex="-1"></a><span class="co">#&gt; sexM                      | SMD   | 0.138        | 0.116        | Balanced     </span></span>
-<span id="cb5-38"><a href="#cb5-38" tabindex="-1"></a><span class="co">#&gt; age:sexF                  | SMD   | 0.143        | 0.130        | Balanced     </span></span>
-<span id="cb5-39"><a href="#cb5-39" tabindex="-1"></a><span class="co">#&gt; age:sexM                  | SMD   | 0.156        | 0.126        | Balanced     </span></span>
+<span id="cb5-36"><a href="#cb5-36" tabindex="-1"></a><span class="co">#&gt; sexF                      | SMD   | 0.138        | 0.119        | Balanced     </span></span>
+<span id="cb5-37"><a href="#cb5-37" tabindex="-1"></a><span class="co">#&gt; sexM                      | SMD   | 0.138        | 0.119        | Balanced     </span></span>
+<span id="cb5-38"><a href="#cb5-38" tabindex="-1"></a><span class="co">#&gt; age:sexF                  | SMD   | 0.143        | 0.129        | Balanced     </span></span>
+<span id="cb5-39"><a href="#cb5-39" tabindex="-1"></a><span class="co">#&gt; age:sexM                  | SMD   | 0.156        | 0.129        | Balanced     </span></span>
 <span id="cb5-40"><a href="#cb5-40" tabindex="-1"></a><span class="co">#&gt; --------------------------------------------------------------------------------</span></span>
 <span id="cb5-41"><a href="#cb5-41" tabindex="-1"></a></span>
 <span id="cb5-42"><a href="#cb5-42" tabindex="-1"></a><span class="fu">all.equal</span>(seed_before, .Random.seed)</span>
