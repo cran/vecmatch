@@ -48,7 +48,7 @@ old_plan <- future::plan()
 on.exit(future::plan(old_plan), add = TRUE)
 future::plan(
   future::multisession,
-  workers = 4
+  workers = 2
 )
 
 ## 3. Seeding before calling optimize_gps()
@@ -59,7 +59,7 @@ opt_results <- optimize_gps(
   data     = cancer,
   formula  = formula_cancer,
   opt_args = opt_args,
-  n_iter   = 6000
+  n_iter   = 600
 )
 
 summary(opt_results)
